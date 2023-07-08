@@ -12,6 +12,7 @@ def main():
     argumentParser = argparse.ArgumentParser(description='Algo Trading Bot.')
     argumentParser.add_argument(
         'quantity', type=float, help='Quantity of asset to trade.')
+    argumentParser.add_argument('symbol', type=str, help='Asset Symbol.')
     argumentParser.add_argument('strategy', type=str, choices=[
                                 SCALPING_ATR, SMA_CROSSOVER], help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER })')
     arguments = argumentParser.parse_args()
@@ -21,10 +22,12 @@ def main():
         'X-API-KEY': jsonEnvContent['ApiKey']
     })
     strategyCode = arguments.strategy
+    assetSymbol = arguments.symbol
+    quantityToTrade = arguments.quantity
     if strategyCode == SCALPING_ATR:
         strategyInstance = ScalpingATR(
             jsonEnvContent, requestInstance, loggerInstance)
-    strategyInstance.executeStrategy()
+    strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
 
 
 if __name__ == '__main__':
