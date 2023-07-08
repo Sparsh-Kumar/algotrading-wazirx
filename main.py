@@ -29,7 +29,8 @@ def main():
     if strategyCode == SCALPING_ATR:
         strategyInstance = ScalpingATR(
             jsonEnvContent, requestInstance, loggerInstance)
-    strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+    while True:
+        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
 
 
 if __name__ == '__main__':
