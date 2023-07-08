@@ -4,8 +4,10 @@ import json
 import os
 import pandas as pd
 import numpy as np
+import uuid
 from datetime import datetime
 from wazirxHelper import WazirXHelper
+from pymongo import MongoClient
 
 class ScalpingATR(WazirXHelper):
 
@@ -16,6 +18,8 @@ class ScalpingATR(WazirXHelper):
         self.exitThreshold = 0.005
         self.timeOfBuy = None
         self.timeOfSell = None
+        self.humanReadableTimeofBuy = None
+        self.humanReadableTimeOfSell = None
         self.position = None
         self.entryPrice = None
         self.exitPrice = None
@@ -23,6 +27,30 @@ class ScalpingATR(WazirXHelper):
         self.totalSellPrice = None
         self.buyOrderDetails = None
         self.sellOrderDetails = None
+        self.uuidOfTrade = None
+        self.dbClient = None
+        self.databaseHandle = None
+        self.collectionHandle = None
+        self.dbConnect()
+        self.initializeTradeInDB()
+
+    def dbConnect(self):
+        try:
+            self.dbClient = MongoClient(self.creds['databaseURI'])
+            self.databaseHandle = self.dbClient.get_database(self.creds['databaseName'])
+            self.collectionHandle = self.databaseHandle[f"trades-{datetime.now().strftime('%Y-%m-%d')}"]
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
+
+    def initializeTradeInDB(self):
+        try:
+            self.uuidOfTrade = str(uuid.uuid4())
+            if self.collectionHandle is not None:
+                self.collectionHandle.insert_one({ 'tradeId': self.uuidOfTrade })
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
 
     def getDataWithXMinTimeFrame(self, symbol=None, mins=30):
         try:
@@ -72,6 +100,8 @@ class ScalpingATR(WazirXHelper):
             if not quantityToTrade or quantityToTrade < 0:
                 raise Exception('Asset Quantity to trade is required.')
 
+            self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade}, { '$set': {'assetSymbol': symbol } })
+
             # Buying Loop
             while True:
                 time.sleep(5)
@@ -84,9 +114,11 @@ class ScalpingATR(WazirXHelper):
                     self.totalBuyPrice = self.entryPrice * quantityToTrade
                     self.exitPrice = self.entryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
+                    self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
+                    self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': {'entryPrice': self.entryPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfBuy': self.timeOfBuy, 'humanReadableTimeOfBuy': self.humanReadableTimeofBuy, 'totalBuyPrice': self.totalBuyPrice } })
                     #self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
                     #print(self.buyOrderDetails.json())
-                    print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.totalBuyPrice}")
+                    print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.humanReadableTimeofBuy}")
                     break
 
                 os.system('cls' if os.name == 'nt' else 'clear')
@@ -107,10 +139,12 @@ class ScalpingATR(WazirXHelper):
                         self.position = None
                         self.exitPrice = kLineDataFrame.iloc[-1]['Close']
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
+                        self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
                         self.totalSellPrice = self.exitPrice * quantityToTrade
+                        self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': { 'exitPrice': self.exitPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfSell': self.timeOfSell, 'humanReadableTimeOfSell': self.humanReadableTimeOfSell, 'totalSellPrice': self.totalSellPrice } })
                         #self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
                         #print(self.sellOrderDetails.json())
-                        print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.totalSellPrice}")
+                        print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.humanReadableTimeOfSell}")
                         break
 
                     os.system('cls' if os.name == 'nt' else 'clear')
