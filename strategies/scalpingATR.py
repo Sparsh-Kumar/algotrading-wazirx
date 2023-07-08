@@ -84,8 +84,8 @@ class ScalpingATR(WazirXHelper):
                     self.totalBuyPrice = self.entryPrice * quantityToTrade
                     self.exitPrice = self.entryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
-                    self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
-                    print(self.buyOrderDetails.json())
+                    #self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
+                    #print(self.buyOrderDetails.json())
                     print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.totalBuyPrice}")
                     break
 
@@ -108,14 +108,14 @@ class ScalpingATR(WazirXHelper):
                         self.exitPrice = kLineDataFrame.iloc[-1]['Close']
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.totalSellPrice = self.exitPrice * quantityToTrade
-                        self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
-                        print(self.sellOrderDetails.json())
+                        #self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
+                        #print(self.sellOrderDetails.json())
                         print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.totalSellPrice}")
                         break
 
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print('\nTrying to Sell\n=============')
-                    print(self.buyOrderDetails.json())
+                    #print(self.buyOrderDetails.json())
                     print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.totalBuyPrice}")
                     print(kLineDataFrame)
 
