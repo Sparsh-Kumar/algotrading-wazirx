@@ -141,7 +141,7 @@ class ScalpingATR(WazirXHelper):
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
                         self.totalSellPrice = self.exitPrice * quantityToTrade
-                        self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': { 'exitPrice': self.exitPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfSell': self.timeOfSell, 'humanReadableTimeOfSell': self.humanReadableTimeOfSell, 'totalSellPrice': self.totalSellPrice } })
+                        self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': { 'exitPrice': self.exitPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfSell': self.timeOfSell, 'humanReadableTimeOfSell': self.humanReadableTimeOfSell, 'totalSellPrice': self.totalSellPrice, 'netProfitOrLoss': (self.totalSellPrice - self.totalBuyPrice) } })
                         #self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
                         #print(self.sellOrderDetails.json())
                         print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.humanReadableTimeOfSell}")
