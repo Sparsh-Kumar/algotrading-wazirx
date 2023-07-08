@@ -65,9 +65,10 @@ class WazirXHelper:
     # typeOfOrder can be buy / sell
     def sendOrder(self, symbol = None, price = None, quantity = None, side = None, typeOfOrder = 'limit'):
         try:
-            timestamp = int(time.time() * 1000)
+            timestamp = datetime.now().timestamp()
+            timestamp = int(timestamp * 1000)
             apiSecretKey = self.creds['SecretKey']
-            preHashString = f"{apiSecretKey}&price={price}&quantity={quantity}&recvWindow=1000&side={side}&symbol={symbol}&timestamp={timestamp}&type={typeOfOrder}"
+            preHashString = f"{apiSecretKey}&price={price}&quantity={quantity}&recvWindow=60000&side={side}&symbol={symbol}&timestamp={timestamp}&type={typeOfOrder}"
             signature = hmac.new(apiSecretKey.encode(), preHashString.encode(), hashlib.sha256).hexdigest()
 
             # Sending the POST request
