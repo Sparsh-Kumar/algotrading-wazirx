@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import sys
-
+import time
+import hashlib
+import hmac
 
 class WazirXHelper:
     def __init__(self, creds, requestInstance, loggerInstance):
@@ -56,6 +58,22 @@ class WazirXHelper:
             totalSeconds30MinsBefore = (
                 utcTime30MinsBefore - epochTime).total_seconds()
             return self.kLineData(symbol, limit, str(interval)+'m', totalSeconds30MinsBefore)
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
+
+    # typeOfOrder can be buy / sell
+    def sendOrder(self, symbol = None, price = None, quantity = None, side = None, typeOfOrder = 'limit'):
+        try:
+            timestamp = int(time.time() * 1000)
+            apiSecretKey = self.creds['SecretKey']
+            preHashString = f"{apiSecretKey}&price={price}&quantity={quantity}&recvWindow=1000&side={side}&symbol={symbol}&timestamp={timestamp}&type={typeOfOrder}"
+            signature = hmac.new(apiSecretKey.encode(), preHashString.encode(), hashlib.sha256).hexdigest()
+
+            # Sending the POST request
+            orderResponse = self.requestInstance.postURI('/order', { 'price': price,'quantity': quantity,'recvWindow': 1000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder,'signature': signature })
+            return orderResponse
+
         except Exception as e:
             self.loggerInstance.logError(str(e))
             sys.exit()

@@ -20,7 +20,8 @@ def main():
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
     requestInstance = Requests(jsonEnvContent['baseURI'], {
-        'X-API-KEY': jsonEnvContent['ApiKey']
+        'X-API-KEY': jsonEnvContent['ApiKey'],
+        'Content-Type': 'application/x-www-form-urlencoded'
     })
     strategyCode = arguments.strategy
     assetSymbol = arguments.symbol
