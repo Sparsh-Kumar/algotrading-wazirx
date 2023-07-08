@@ -11,10 +11,11 @@ def main():
     strategyInstance = None
     argumentParser = argparse.ArgumentParser(description='Algo Trading Bot.')
     argumentParser.add_argument(
-        'quantity', type=float, help='Quantity of asset to trade.')
-    argumentParser.add_argument('symbol', type=str, help='Asset Symbol.')
-    argumentParser.add_argument('strategy', type=str, choices=[
-                                SCALPING_ATR, SMA_CROSSOVER], help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER })')
+        '--quantity', type=float, dest='quantity', help='Quantity of asset to trade.')
+    argumentParser.add_argument(
+        '--symbol', type=str, dest='symbol', help='Asset Symbol.')
+    argumentParser.add_argument('--strategy', type=str, choices=[
+                                SCALPING_ATR, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER })')
     arguments = argumentParser.parse_args()
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
