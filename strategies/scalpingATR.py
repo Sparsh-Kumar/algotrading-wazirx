@@ -107,7 +107,7 @@ class ScalpingATR(WazirXHelper):
 
             # Buying Loop
             while True:
-                time.sleep(5)
+                time.sleep(3)
                 kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.atrPeriod + 1)
                 kLineDataFrame = self.calculateATR(kLineDataFrame)
 
@@ -150,7 +150,7 @@ class ScalpingATR(WazirXHelper):
             # Selling Condition
             if self.position == 'long':
                 while True:
-                    time.sleep(5)
+                    time.sleep(3)
                     kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.atrPeriod + 1)
                     kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
                     if kLineDataFrame is None or kLineDataFrame.empty:
@@ -158,8 +158,21 @@ class ScalpingATR(WazirXHelper):
                     kLineDataFrame = self.calculateATR(kLineDataFrame)
 
                     if kLineDataFrame.iloc[-1]['Close'] >= self.exitPrice:
-                        # Check If the buy Order is fulfilled.
-                        # if not then cancel that order and break out of loop.
+                        currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
+                        currentBuyOrderDetails = currentBuyOrderDetails.json()
+
+                        # Check If the buy Order is not yet fulfilled.
+                        # Then cancel that order
+                        # Remove document from database 
+                        # Break out of loop.
+                        
+                        if currentBuyOrderDetails['status'] != 'done':
+                            print(f"Cancelling the buying Order & deleting it from Database.")
+                            cancelledOrderDetails = self.cancelOrder(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'], symbol)
+                            cancelledOrderDetails = cancelledOrderDetails.json()
+                            self.collectionHandle.delete_one({ '_id': self.mongoDbBuyOrderDetailsDoc['_id'] })
+                            break
+
                         self.position = None
                         self.exitPrice = kLineDataFrame.iloc[-1]['Close']
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
@@ -193,7 +206,6 @@ class ScalpingATR(WazirXHelper):
 
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print('\nTrying to Sell\n=============')
-                    #print(self.buyOrderDetails.json())
                     print(self.mongoDbBuyOrderDetailsDoc)
                     print(kLineDataFrame)
 

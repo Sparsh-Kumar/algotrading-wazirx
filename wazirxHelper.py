@@ -64,20 +64,47 @@ class WazirXHelper:
             self.loggerInstance.logError(str(e))
             sys.exit()
 
-    # typeOfOrder can be buy / sell
-    def sendOrder(self, symbol = None, price = None, quantity = None, side = None, typeOfOrder = 'limit'):
+    # Calculate signature
+    def calculateSignature(self, requestPayload = None):
         try:
             timestamp = datetime.now().timestamp()
             timestamp = int(timestamp * 1000)
             apiSecretKey = self.creds['SecretKey']
-            requestPayload = { 'price': price,'quantity': quantity,'recvWindow': 60000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder }
+            requestPayload['timestamp'] = timestamp
+            requestPayload['recvWindow'] = 60000
             signedPayload = urllib.parse.urlencode(requestPayload)
             requestPayload['signature'] = hmac.new(apiSecretKey.encode('latin-1'), msg = signedPayload.encode('latin-1'), digestmod=hashlib.sha256).hexdigest()
+            return requestPayload
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
 
-            # Sending the POST request
-            orderResponse = self.requestInstance.postURI('/order', requestPayload)
-            return orderResponse
+    # side can be buy / sell
+    def sendOrder(self, symbol = None, price = None, quantity = None, side = None, typeOfOrder = 'limit'):
+        try:
+            requestPayload = { 'price': price,'quantity': quantity,'side': side,'symbol': symbol,'type': typeOfOrder }
+            requestPayload = self.calculateSignature(requestPayload)
+            return self.requestInstance.postURI('/order', requestPayload)
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
+    
+    # Get Order Details
+    def getOrderDetails(self, orderId = None):
+        try:
+            requestPayload = { 'orderId': orderId }
+            requestPayload = self.calculateSignature(requestPayload)
+            return self.requestInstance.getURI('/order', requestPayload)
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
 
+    # Cancel Particular Order
+    def cancelOrder(self, orderId = None, symbol = None):
+        try:
+            requestPayload = { 'orderId': orderId, 'symbol': symbol }
+            requestPayload = self.calculateSignature(requestPayload)
+            return self.requestInstance.deleteURI('/order', requestPayload)
         except Exception as e:
             self.loggerInstance.logError(str(e))
             sys.exit()
