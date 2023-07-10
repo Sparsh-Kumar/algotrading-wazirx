@@ -3,6 +3,8 @@ import sys
 import time
 import hashlib
 import hmac
+from urllib import request
+import urllib.parse
 
 class WazirXHelper:
     def __init__(self, creds, requestInstance, loggerInstance):
@@ -68,11 +70,12 @@ class WazirXHelper:
             timestamp = datetime.now().timestamp()
             timestamp = int(timestamp * 1000)
             apiSecretKey = self.creds['SecretKey']
-            preHashString = f"{apiSecretKey}&price={price}&quantity={quantity}&recvWindow=60000&side={side}&symbol={symbol}&timestamp={timestamp}&type={typeOfOrder}"
-            signature = hmac.new(apiSecretKey.encode(), preHashString.encode(), hashlib.sha256).hexdigest()
+            requestPayload = { 'price': price,'quantity': quantity,'recvWindow': 60000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder }
+            signedPayload = urllib.parse.urlencode(requestPayload)
+            requestPayload['signature'] = hmac.new(apiSecretKey.encode('latin-1'), msg = signedPayload.encode('latin-1'), digestmod=hashlib.sha256).hexdigest()
 
             # Sending the POST request
-            orderResponse = self.requestInstance.postURI('/order', { 'price': price,'quantity': quantity,'recvWindow': 60000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder,'signature': signature })
+            orderResponse = self.requestInstance.postURI('/order', requestPayload)
             return orderResponse
 
         except Exception as e:
