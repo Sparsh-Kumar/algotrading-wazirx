@@ -72,7 +72,7 @@ class WazirXHelper:
             signature = hmac.new(apiSecretKey.encode(), preHashString.encode(), hashlib.sha256).hexdigest()
 
             # Sending the POST request
-            orderResponse = self.requestInstance.postURI('/order', { 'price': price,'quantity': quantity,'recvWindow': 1000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder,'signature': signature })
+            orderResponse = self.requestInstance.postURI('/order', { 'price': price,'quantity': quantity,'recvWindow': 60000,'side': side,'symbol': symbol,'timestamp': timestamp,'type': typeOfOrder,'signature': signature })
             return orderResponse
 
         except Exception as e:
