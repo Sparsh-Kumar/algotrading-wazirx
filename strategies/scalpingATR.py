@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 from wazirxHelper import WazirXHelper
 from pymongo import MongoClient
+from pymongo import ReturnDocument
 
 class ScalpingATR(WazirXHelper):
 
@@ -27,6 +28,8 @@ class ScalpingATR(WazirXHelper):
         self.totalSellPrice = None
         self.buyOrderDetails = None
         self.sellOrderDetails = None
+        self.mongoDbBuyOrderDetailsDoc = None
+        self.mongoDbSellOrderDetailsDoc = None
         self.uuidOfTrade = None
         self.dbClient = None
         self.databaseHandle = None
@@ -115,10 +118,29 @@ class ScalpingATR(WazirXHelper):
                     self.exitPrice = self.entryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
-                    self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': {'entryPrice': self.entryPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfBuy': self.timeOfBuy, 'humanReadableTimeOfBuy': self.humanReadableTimeofBuy, 'totalBuyPrice': self.totalBuyPrice } })
-                    #self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
-                    #print(self.buyOrderDetails.json())
-                    print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.humanReadableTimeofBuy}")
+                    self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
+                    self.buyOrderDetails = self.buyOrderDetails.json()
+                    self.mongoDbBuyOrderDetailsDoc = self.collectionHandle.find_one_and_update(
+                        {
+                            'tradeId': self.uuidOfTrade
+                        },
+                        {
+                            '$set': {
+                                'entryPrice': self.entryPrice,
+                                'assetSymbol': symbol,
+                                'quantity': quantityToTrade,
+                                'timeOfBuy': self.timeOfBuy,
+                                'humanReadableTimeOfBuy': self.humanReadableTimeofBuy,
+                                'totalBuyPrice': self.totalBuyPrice,
+                                'wazirXBuyOrderId': self.buyOrderDetails['id'],
+                                'wazirXBuyPrice': self.buyOrderDetails['price'],
+                                'wazirXBuyOriginalQty': self.buyOrderDetails['origQty'],
+                                'wazirXBuyExecutedQty': self.buyOrderDetails['executedQty']
+                            }
+                        },
+                        return_document=ReturnDocument.AFTER
+                    )
+                    print(self.mongoDbBuyOrderDetailsDoc)
                     break
 
                 os.system('cls' if os.name == 'nt' else 'clear')
@@ -136,13 +158,35 @@ class ScalpingATR(WazirXHelper):
                     kLineDataFrame = self.calculateATR(kLineDataFrame)
 
                     if kLineDataFrame.iloc[-1]['Close'] >= self.exitPrice:
+                        # Check If the buy Order is fulfilled.
+                        # if not then cancel that order and break out of loop.
                         self.position = None
                         self.exitPrice = kLineDataFrame.iloc[-1]['Close']
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
                         self.totalSellPrice = self.exitPrice * quantityToTrade
-                        self.collectionHandle.find_one_and_update({ 'tradeId': self.uuidOfTrade }, { '$set': { 'exitPrice': self.exitPrice, 'assetSymbol': symbol, 'quantity': quantityToTrade, 'timeOfSell': self.timeOfSell, 'humanReadableTimeOfSell': self.humanReadableTimeOfSell, 'totalSellPrice': self.totalSellPrice, 'netProfitOrLoss': (self.totalSellPrice - self.totalBuyPrice) } })
-                        #self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
+                        self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
+                        self.sellOrderDetails = self.sellOrderDetails.json()
+                        self.mongoDbSellOrderDetailsDoc = self.collectionHandle.find_one_and_update(
+                            {
+                                'tradeId': self.uuidOfTrade
+                            },
+                            {
+                                '$set': {
+                                    'exitPrice': self.exitPrice,
+                                    'assetSymbol': symbol,
+                                    'quantity': quantityToTrade,
+                                    'timeOfSell': self.timeOfSell,
+                                    'humanReadableTimeOfSell': self.humanReadableTimeOfSell,
+                                    'totalSellPrice': self.totalSellPrice,
+                                    'wazirXSellOrderId': self.sellOrderDetails['id'],
+                                    'wazirXSellPrice': self.sellOrderDetails['price'],
+                                    'wazirXSellOriginalQty': self.sellOrderDetails['origQty'],
+                                    'wazirXSellExecutedQty': self.sellOrderDetails['executedQty'],
+                                }
+                            },
+                            return_document=ReturnDocument.AFTER
+                        )
                         #print(self.sellOrderDetails.json())
                         print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.humanReadableTimeOfSell}")
                         break
@@ -150,7 +194,7 @@ class ScalpingATR(WazirXHelper):
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print('\nTrying to Sell\n=============')
                     #print(self.buyOrderDetails.json())
-                    print(f"Bought Quantity = {quantityToTrade} of Asset = {symbol} at {self.entryPrice} price. Total Buy at {self.timeOfBuy} timestamp is {self.totalBuyPrice}")
+                    print(self.mongoDbBuyOrderDetailsDoc)
                     print(kLineDataFrame)
 
         except Exception as e:
