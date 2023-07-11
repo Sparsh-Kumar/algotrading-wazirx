@@ -128,7 +128,7 @@ class ScalpingATR(WazirXHelper):
                     self.originalEntryPrice = bestAsk
                     self.speculatedTotalBuyPrice = float(self.speculatedEntryPrice) * float(quantityToTrade)
                     self.originalTotalBuyPrice = float(self.originalEntryPrice) * float(quantityToTrade)
-                    self.speculatedExitPrice = self.speculatedEntryPrice + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
+                    self.speculatedExitPrice = self.originalEntryPrice + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
                     self.speculatedTotalSellPrice = float(self.speculatedExitPrice) * float(quantityToTrade)
 
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
@@ -170,16 +170,27 @@ class ScalpingATR(WazirXHelper):
                 print(kLineDataFrame)
 
             # Selling Condition
+            # If Already Bought
+            # Don't need kLine Data , because we are comparing price right ?.
+            # So, we don't need to check if there is a trend or not. We just need more price of our asset than entryPrice
+            # So taking look at order book again and again and see if there is bid that satisfies our needs.
+
             if self.position == 'long':
                 while True:
                     time.sleep(3)
-                    kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.atrPeriod + 1)
-                    kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
-                    if kLineDataFrame is None or kLineDataFrame.empty:
-                        continue
-                    kLineDataFrame = self.calculateATR(kLineDataFrame)
 
-                    if kLineDataFrame.iloc[-1]['Close'] >= self.speculatedExitPrice:
+                    # kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.atrPeriod + 1)
+                    # kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
+                    # if kLineDataFrame is None or kLineDataFrame.empty:
+                    #     continue
+                    # kLineDataFrame = self.calculateATR(kLineDataFrame)
+                    
+                    # Getting the best Ask from the order book
+                    latestOrderBookData = self.getOrderBookData(symbol, 5)
+                    latestOrderBookData = latestOrderBookData.json()
+                    bestBid = latestOrderBookData['bids'][0][0]
+
+                    if bestBid >= self.originalEntryPrice:
                         currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
                         currentBuyOrderDetails = currentBuyOrderDetails.json()
 
@@ -194,11 +205,6 @@ class ScalpingATR(WazirXHelper):
                             cancelledOrderDetails = cancelledOrderDetails.json()
                             self.collectionHandle.delete_one({ '_id': self.mongoDbBuyOrderDetailsDoc['_id'] })
                             break
-                            
-                        # Getting the best Ask from the order book
-                        latestOrderBookData = self.getOrderBookData(symbol, 5)
-                        latestOrderBookData = latestOrderBookData.json()
-                        bestBid = latestOrderBookData['bids'][0][0]
                         
                         self.position = None
                         self.originalExitPrice = bestBid
@@ -237,7 +243,7 @@ class ScalpingATR(WazirXHelper):
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print('\nTrying to Sell\n=============')
                     print(self.mongoDbBuyOrderDetailsDoc)
-                    print(kLineDataFrame)
+                    print(f"Best bid currently is {bestBid}")
 
         except Exception as e:
             self.loggerInstance.logError(str(e))
