@@ -157,6 +157,8 @@ class ScalpingATR(WazirXHelper):
                                 'speculatedTotalBuyPrice': self.speculatedTotalBuyPrice,
                                 'speculatedTotalSellPrice': self.speculatedTotalSellPrice,
                                 'originalTotalBuyPrice': self.originalTotalBuyPrice,
+                                'stopLossPercentage': self.stopLossPercentage,
+                                'stopLossPrice': self.stopLossPrice,
                                 'wazirXBuyOrderId': self.buyOrderDetails['id'],
                                 'wazirXBuyPrice': self.buyOrderDetails['price'],
                                 'wazirXBuyOriginalQty': self.buyOrderDetails['origQty'],
