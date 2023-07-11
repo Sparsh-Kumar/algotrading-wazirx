@@ -15,8 +15,8 @@ class ScalpingATR(WazirXHelper):
     def __init__(self, creds, requestInstance, loggerInstance):
         super().__init__(creds, requestInstance, loggerInstance)
         self.atrPeriod = 5
-        self.entryThreshold = 0.01
-        self.exitThreshold = 0.030
+        self.entryThreshold = 0.02
+        self.exitThreshold = 0.03
         self.timeOfBuy = None
         self.timeOfSell = None
         self.humanReadableTimeofBuy = None
@@ -212,7 +212,7 @@ class ScalpingATR(WazirXHelper):
                                 }, {
                                     '$set': {
                                         'orderCancelled': True,
-                                        'cancelledReason': 'BUY_ORDER_NOT_FULLFILLED'
+                                        'cancelledReason': 'BUY_ORDER_NOT_FULLFILLED',
                                         'isDeleted': True
                                     }
                                 },
