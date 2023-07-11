@@ -31,7 +31,7 @@ class ScalpingATR(WazirXHelper):
         self.originalTotalBuyPrice = None
         self.originalTotalSellPrice = None
         self.stopLossPrice = None
-        self.stopLossPercentage = 0.005
+        self.stopLossPercentage = 0.02
         self.buyOrderDetails = None
         self.sellOrderDetails = None
         self.mongoDbBuyOrderDetailsDoc = None
@@ -160,7 +160,7 @@ class ScalpingATR(WazirXHelper):
                                 'stopLossPercentage': self.stopLossPercentage,
                                 'stopLossPrice': self.stopLossPrice,
                                 'wazirXBuyOrderId': self.buyOrderDetails['id'],
-                                'wazirXBuyPrice': self.buyOrderDetails['price'],
+                                'wazirXBuyPrice': float(self.buyOrderDetails['price']),
                                 'wazirXBuyOriginalQty': self.buyOrderDetails['origQty'],
                                 'wazirXBuyExecutedQty': self.buyOrderDetails['executedQty']
                             }
@@ -246,7 +246,7 @@ class ScalpingATR(WazirXHelper):
                                     'humanReadableTimeOfSell': self.humanReadableTimeOfSell,
                                     'originalTotalSellPrice': self.originalTotalSellPrice,
                                     'wazirXSellOrderId': self.sellOrderDetails['id'],
-                                    'wazirXSellPrice': self.sellOrderDetails['price'],
+                                    'wazirXSellPrice': float(self.sellOrderDetails['price']),
                                     'wazirXSellOriginalQty': self.sellOrderDetails['origQty'],
                                     'wazirXSellExecutedQty': self.sellOrderDetails['executedQty'],
                                     'isStopLossHit': isStopLossHit
