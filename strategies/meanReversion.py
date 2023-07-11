@@ -1,3 +1,4 @@
+import sys
 import time
 import json
 import os
@@ -61,6 +62,18 @@ class MeanReversion(WazirXHelper):
             self.loggerInstance.logError(str(e))
             sys.exit()
 
+    def calculateMean(self, kLineDataFrame = None):
+        if kLineDataFrame is None or kLineDataFrame.empty:
+            return None
+        kLineDataFrame['Mean'] = kLineDataFrame['Close'].rolling(self.lookBackPeriod).mean()
+        return kLineDataFrame
+
+    def calculateStd(self, kLineDataFrame = None):
+        if kLineDataFrame is None or kLineDataFrame.empty:
+            return None
+        kLineDataFrame['StdDev'] = kLineDataFrame['Close'].rolling(self.lookBackPeriod).std()
+        return kLineDataFrame
+
     def executeStrategy(self, symbol = None, quantityToTrade = None):
         try:
             if not symbol:
@@ -73,6 +86,8 @@ class MeanReversion(WazirXHelper):
             while True:
                 time.sleep(3)
                 kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.lookBackPeriod + 1)
+                kLineDataFrame = self.calculateMean(kLineDataFrame)
+                kLineDataFrame = self.calculateStd(kLineDataFrame)
                 print(kLineDataFrame)
                 # Todo
             
