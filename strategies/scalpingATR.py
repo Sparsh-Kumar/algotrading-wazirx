@@ -30,6 +30,8 @@ class ScalpingATR(WazirXHelper):
         self.speculatedTotalSellPrice = None
         self.originalTotalBuyPrice = None
         self.originalTotalSellPrice = None
+        self.stopLossPrice = None
+        self.stopLossPercentage = 0.005
         self.buyOrderDetails = None
         self.sellOrderDetails = None
         self.mongoDbBuyOrderDetailsDoc = None
@@ -130,6 +132,7 @@ class ScalpingATR(WazirXHelper):
                     self.originalTotalBuyPrice = float(self.originalEntryPrice) * float(quantityToTrade)
                     self.speculatedExitPrice = float(self.originalEntryPrice) + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
                     self.speculatedTotalSellPrice = float(self.speculatedExitPrice) * float(quantityToTrade)
+                    self.stopLossPrice = float(self.originalEntryPrice) * (1 + float(self.stopLossPercentage))
 
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
@@ -190,7 +193,7 @@ class ScalpingATR(WazirXHelper):
                     latestOrderBookData = latestOrderBookData.json()
                     bestBid = float(latestOrderBookData['bids'][0][0])
 
-                    if bestBid >= self.originalEntryPrice:
+                    if (bestBid >= self.originalEntryPrice) or (bestBid <= self.stopLossPrice):
                         currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
                         currentBuyOrderDetails = currentBuyOrderDetails.json()
 
@@ -203,7 +206,18 @@ class ScalpingATR(WazirXHelper):
                             print(f"Cancelling the buying Order & deleting it from Database.")
                             cancelledOrderDetails = self.cancelOrder(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'], symbol)
                             cancelledOrderDetails = cancelledOrderDetails.json()
-                            self.collectionHandle.delete_one({ '_id': self.mongoDbBuyOrderDetailsDoc['_id'] })
+                            self.collectionHandle.find_one_and_update(
+                                {
+                                    '_id': self.mongoDbBuyOrderDetailsDoc['_id']
+                                }, {
+                                    '$set': {
+                                        'orderCancelled': True,
+                                        'cancelledReason': 'BUY_ORDER_NOT_FULLFILLED'
+                                        'isDeleted': True
+                                    }
+                                },
+                                return_document=ReturnDocument.AFTER
+                            )
                             break
                         
                         self.position = None
@@ -215,6 +229,7 @@ class ScalpingATR(WazirXHelper):
                         # Imitiating the Market Order
                         self.sellOrderDetails = self.sendOrder(symbol, self.originalExitPrice, quantityToTrade, 'sell')
                         self.sellOrderDetails = self.sellOrderDetails.json()
+                        isStopLossHit = (bestBid <= self.stopLossPrice)
 
                         self.mongoDbSellOrderDetailsDoc = self.collectionHandle.find_one_and_update(
                             {
@@ -232,6 +247,7 @@ class ScalpingATR(WazirXHelper):
                                     'wazirXSellPrice': self.sellOrderDetails['price'],
                                     'wazirXSellOriginalQty': self.sellOrderDetails['origQty'],
                                     'wazirXSellExecutedQty': self.sellOrderDetails['executedQty'],
+                                    'isStopLossHit': isStopLossHit
                                 }
                             },
                             return_document=ReturnDocument.AFTER
