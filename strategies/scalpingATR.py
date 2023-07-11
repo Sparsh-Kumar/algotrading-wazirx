@@ -121,14 +121,14 @@ class ScalpingATR(WazirXHelper):
                     # Getting the best Ask from the order book
                     latestOrderBookData = self.getOrderBookData(symbol, 5)
                     latestOrderBookData = latestOrderBookData.json()
-                    bestAsk = latestOrderBookData['asks'][0][0]
+                    bestAsk = float(latestOrderBookData['asks'][0][0])
 
                     # Calculating Speculated and Original Information
-                    self.speculatedEntryPrice = kLineDataFrame.iloc[-1]['Close']
-                    self.originalEntryPrice = bestAsk
+                    self.speculatedEntryPrice = float(kLineDataFrame.iloc[-1]['Close'])
+                    self.originalEntryPrice = float(bestAsk)
                     self.speculatedTotalBuyPrice = float(self.speculatedEntryPrice) * float(quantityToTrade)
                     self.originalTotalBuyPrice = float(self.originalEntryPrice) * float(quantityToTrade)
-                    self.speculatedExitPrice = self.originalEntryPrice + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
+                    self.speculatedExitPrice = float(self.originalEntryPrice) + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
                     self.speculatedTotalSellPrice = float(self.speculatedExitPrice) * float(quantityToTrade)
 
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
@@ -188,7 +188,7 @@ class ScalpingATR(WazirXHelper):
                     # Getting the best Ask from the order book
                     latestOrderBookData = self.getOrderBookData(symbol, 5)
                     latestOrderBookData = latestOrderBookData.json()
-                    bestBid = latestOrderBookData['bids'][0][0]
+                    bestBid = float(latestOrderBookData['bids'][0][0])
 
                     if bestBid >= self.originalEntryPrice:
                         currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
@@ -207,7 +207,7 @@ class ScalpingATR(WazirXHelper):
                             break
                         
                         self.position = None
-                        self.originalExitPrice = bestBid
+                        self.originalExitPrice = float(bestBid)
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
                         self.originalTotalSellPrice = float(self.originalExitPrice) * float(quantityToTrade)
@@ -236,8 +236,8 @@ class ScalpingATR(WazirXHelper):
                             },
                             return_document=ReturnDocument.AFTER
                         )
-                        #print(self.sellOrderDetails.json())
-                        print(f"Sold Quantity = {quantityToTrade} of Asset = {symbol} at {self.exitPrice} price. Total Sold at {self.timeOfSell} timestamp is {self.humanReadableTimeOfSell}")
+                        print('Sold the Asset')
+                        print(self.mongoDbSellOrderDetailsDoc)
                         break
 
                     os.system('cls' if os.name == 'nt' else 'clear')
