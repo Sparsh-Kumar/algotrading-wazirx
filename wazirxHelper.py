@@ -109,5 +109,15 @@ class WazirXHelper:
             self.loggerInstance.logError(str(e))
             sys.exit()
 
+    # Get Order Book Data
+    def getOrderBookData(self, symbol = None, limit = None):
+        try:
+            requestPayload = { 'symbol': symbol, 'limit': limit }
+            requestPayload = self.calculateSignature(requestPayload)
+            return self.requestInstance.getURI('/depth', requestPayload)
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
+
     def __del__(self):
         pass

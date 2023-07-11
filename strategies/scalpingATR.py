@@ -16,16 +16,20 @@ class ScalpingATR(WazirXHelper):
         super().__init__(creds, requestInstance, loggerInstance)
         self.atrPeriod = 5
         self.entryThreshold = 0.01
-        self.exitThreshold = 0.005
+        self.exitThreshold = 0.030
         self.timeOfBuy = None
         self.timeOfSell = None
         self.humanReadableTimeofBuy = None
         self.humanReadableTimeOfSell = None
         self.position = None
-        self.entryPrice = None
-        self.exitPrice = None
-        self.totalBuyPrice = None
-        self.totalSellPrice = None
+        self.speculatedEntryPrice = None
+        self.speculatedExitPrice = None
+        self.originalEntryPrice = None
+        self.originalExitPrice = None
+        self.speculatedTotalBuyPrice = None
+        self.speculatedTotalSellPrice = None
+        self.originalTotalBuyPrice = None
+        self.originalTotalSellPrice = None
         self.buyOrderDetails = None
         self.sellOrderDetails = None
         self.mongoDbBuyOrderDetailsDoc = None
@@ -113,25 +117,43 @@ class ScalpingATR(WazirXHelper):
 
                 if self.position is None and (kLineDataFrame.iloc[-1]['ATR'] < (self.entryThreshold * kLineDataFrame.iloc[-1]['Close'])) and (kLineDataFrame.iloc[-1]['Close'] > kLineDataFrame.iloc[-2]['Close']):
                     self.position = 'long'
-                    self.entryPrice = kLineDataFrame.iloc[-1]['Close']
-                    self.totalBuyPrice = self.entryPrice * quantityToTrade
-                    self.exitPrice = self.entryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
+
+                    # Getting the best Ask from the order book
+                    latestOrderBookData = self.getOrderBookData(symbol, 5)
+                    latestOrderBookData = latestOrderBookData.json()
+                    bestAsk = latestOrderBookData['asks'][0][0]
+
+                    # Calculating Speculated and Original Information
+                    self.speculatedEntryPrice = kLineDataFrame.iloc[-1]['Close']
+                    self.originalEntryPrice = bestAsk
+                    self.speculatedTotalBuyPrice = self.speculatedEntryPrice * quantityToTrade
+                    self.originalTotalBuyPrice = self.originalEntryPrice * quantityToTrade
+                    self.speculatedExitPrice = self.speculatedEntryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
+                    self.speculatedTotalSellPrice = self.speculatedExitPrice * quantityToTrade
+
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
-                    self.buyOrderDetails = self.sendOrder(symbol, self.entryPrice, quantityToTrade, 'buy')
+
+                    # Imitiating a Market Order
+                    self.buyOrderDetails = self.sendOrder(symbol, bestAsk, quantityToTrade, 'buy')
                     self.buyOrderDetails = self.buyOrderDetails.json()
+
                     self.mongoDbBuyOrderDetailsDoc = self.collectionHandle.find_one_and_update(
                         {
                             'tradeId': self.uuidOfTrade
                         },
                         {
                             '$set': {
-                                'entryPrice': self.entryPrice,
+                                'speculatedEntryPrice': self.speculatedEntryPrice,
+                                'originalEntryPrice': self.originalEntryPrice,
+                                'speculatedExitPrice': self.speculatedExitPrice,
                                 'assetSymbol': symbol,
                                 'quantity': quantityToTrade,
                                 'timeOfBuy': self.timeOfBuy,
                                 'humanReadableTimeOfBuy': self.humanReadableTimeofBuy,
-                                'totalBuyPrice': self.totalBuyPrice,
+                                'speculatedTotalBuyPrice': self.speculatedTotalBuyPrice,
+                                'speculatedTotalSellPrice': self.speculatedTotalSellPrice,
+                                'originalTotalBuyPrice': self.originalTotalBuyPrice,
                                 'wazirXBuyOrderId': self.buyOrderDetails['id'],
                                 'wazirXBuyPrice': self.buyOrderDetails['price'],
                                 'wazirXBuyOriginalQty': self.buyOrderDetails['origQty'],
@@ -157,7 +179,7 @@ class ScalpingATR(WazirXHelper):
                         continue
                     kLineDataFrame = self.calculateATR(kLineDataFrame)
 
-                    if kLineDataFrame.iloc[-1]['Close'] >= self.exitPrice:
+                    if kLineDataFrame.iloc[-1]['Close'] >= self.speculatedExitPrice:
                         currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
                         currentBuyOrderDetails = currentBuyOrderDetails.json()
 
@@ -172,26 +194,34 @@ class ScalpingATR(WazirXHelper):
                             cancelledOrderDetails = cancelledOrderDetails.json()
                             self.collectionHandle.delete_one({ '_id': self.mongoDbBuyOrderDetailsDoc['_id'] })
                             break
-
+                            
+                        # Getting the best Ask from the order book
+                        latestOrderBookData = self.getOrderBookData(symbol, 5)
+                        latestOrderBookData = latestOrderBookData.json()
+                        bestBid = latestOrderBookData['bids'][0][0]
+                        
                         self.position = None
-                        self.exitPrice = kLineDataFrame.iloc[-1]['Close']
+                        self.originalExitPrice = bestBid
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
-                        self.totalSellPrice = self.exitPrice * quantityToTrade
-                        self.sellOrderDetails = self.sendOrder(symbol, self.exitPrice, quantityToTrade, 'sell')
+                        self.originalTotalSellPrice = self.originalExitPrice * quantityToTrade
+
+                        # Imitiating the Market Order
+                        self.sellOrderDetails = self.sendOrder(symbol, self.originalExitPrice, quantityToTrade, 'sell')
                         self.sellOrderDetails = self.sellOrderDetails.json()
+
                         self.mongoDbSellOrderDetailsDoc = self.collectionHandle.find_one_and_update(
                             {
                                 'tradeId': self.uuidOfTrade
                             },
                             {
                                 '$set': {
-                                    'exitPrice': self.exitPrice,
+                                    'originalExitPrice': self.originalExitPrice,
                                     'assetSymbol': symbol,
                                     'quantity': quantityToTrade,
                                     'timeOfSell': self.timeOfSell,
                                     'humanReadableTimeOfSell': self.humanReadableTimeOfSell,
-                                    'totalSellPrice': self.totalSellPrice,
+                                    'originalTotalSellPrice': self.originalTotalSellPrice,
                                     'wazirXSellOrderId': self.sellOrderDetails['id'],
                                     'wazirXSellPrice': self.sellOrderDetails['price'],
                                     'wazirXSellOriginalQty': self.sellOrderDetails['origQty'],
