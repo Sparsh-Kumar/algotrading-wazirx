@@ -145,6 +145,7 @@ class MeanReversion(WazirXHelper):
 
                     ## Make Actual Order
                     ## Do Database Operations
+                    print(f"Bought {quantityToTrade} {symbol}(s) at {self.buyAssetPrice} each with Total Buy Price equals to {self.totalAssetBuyPrice}")
                     print(f"Sold {quantityToTrade} {symbol}(s) at {self.sellAssetPrice} each with Total Buy Price equals to {self.totalAssetSellPrice}")
                     break
 
