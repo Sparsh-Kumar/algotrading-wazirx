@@ -101,6 +101,8 @@ class MeanReversion(WazirXHelper):
                 # Getting the best Ask from the order book
                 latestOrderBookData = self.getOrderBookData(symbol, 5)
                 latestOrderBookData = latestOrderBookData.json()
+                print('In Buy Condition')
+                print(latestOrderBookData);
                 bestAsk = float(latestOrderBookData['asks'][0][0])
                 
                 if self.position is None and (bestAsk < (kLineDataFrame.iloc[-1]['Mean'] - (self.entryThreshold * kLineDataFrame.iloc[-1]['StdDev']))):
@@ -134,6 +136,8 @@ class MeanReversion(WazirXHelper):
                 # Getting the best Bid from the order book
                 latestOrderBookData = self.getOrderBookData(symbol, 5)
                 latestOrderBookData = latestOrderBookData.json()
+                print('In Sell Condition')
+                print(latestOrderBookData)
                 bestBid = float(latestOrderBookData['bids'][0][0])
 
                 if self.position == 'long' and (bestBid > (kLineDataFrame.iloc[-1]['Mean'] + (self.entryThreshold * kLineDataFrame.iloc[-1]['StdDev']))):
