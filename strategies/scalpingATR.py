@@ -14,8 +14,8 @@ class ScalpingATR(WazirXHelper):
 
     def __init__(self, creds, requestInstance, loggerInstance):
         super().__init__(creds, requestInstance, loggerInstance)
-        self.atrPeriod = 5
-        self.entryThreshold = 0.02
+        self.atrPeriod = 14
+        self.entryThreshold = 0.01
         self.exitThreshold = 0.03
         self.timeOfBuy = None
         self.timeOfSell = None
