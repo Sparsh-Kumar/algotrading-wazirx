@@ -4,7 +4,8 @@ from logger import Logger
 from loadenv import loadEnvironmentVariables
 from request import Requests
 from strategies.scalpingATR import ScalpingATR
-from strategyCodes import SCALPING_ATR, SMA_CROSSOVER
+from strategies.meanReversion import MeanReversion
+from strategyCodes import SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION
 
 
 def main():
@@ -16,7 +17,7 @@ def main():
     argumentParser.add_argument(
         '--symbol', type=str, dest='symbol', help='Asset Symbol.')
     argumentParser.add_argument('--strategy', type=str, choices=[
-                                SCALPING_ATR, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER })')
+                                SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER }, { MEAN_REVERSION })')
     arguments = argumentParser.parse_args()
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
@@ -31,8 +32,14 @@ def main():
         # while True:
         strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
         strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
-
-            # After completion, free the allocated memory
+        # After completion, free the allocated memory
+        del strategyInstance
+        gc.collect()
+    elif strategyCode == MEAN_REVERSION:
+        # while True:
+        strategyInstance = MeanReversion(jsonEnvContent, requestInstance, loggerInstance)
+        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+        # After completion, free the allocated memory
         del strategyInstance
         gc.collect()
 
