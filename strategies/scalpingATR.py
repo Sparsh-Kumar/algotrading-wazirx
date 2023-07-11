@@ -126,10 +126,10 @@ class ScalpingATR(WazirXHelper):
                     # Calculating Speculated and Original Information
                     self.speculatedEntryPrice = kLineDataFrame.iloc[-1]['Close']
                     self.originalEntryPrice = bestAsk
-                    self.speculatedTotalBuyPrice = self.speculatedEntryPrice * quantityToTrade
-                    self.originalTotalBuyPrice = self.originalEntryPrice * quantityToTrade
-                    self.speculatedExitPrice = self.speculatedEntryPrice + (self.exitThreshold * kLineDataFrame.iloc[-1]['ATR'])
-                    self.speculatedTotalSellPrice = self.speculatedExitPrice * quantityToTrade
+                    self.speculatedTotalBuyPrice = float(self.speculatedEntryPrice) * float(quantityToTrade)
+                    self.originalTotalBuyPrice = float(self.originalEntryPrice) * float(quantityToTrade)
+                    self.speculatedExitPrice = self.speculatedEntryPrice + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
+                    self.speculatedTotalSellPrice = float(self.speculatedExitPrice) * float(quantityToTrade)
 
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
@@ -204,7 +204,7 @@ class ScalpingATR(WazirXHelper):
                         self.originalExitPrice = bestBid
                         self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                         self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
-                        self.originalTotalSellPrice = self.originalExitPrice * quantityToTrade
+                        self.originalTotalSellPrice = float(self.originalExitPrice) * float(quantityToTrade)
 
                         # Imitiating the Market Order
                         self.sellOrderDetails = self.sendOrder(symbol, self.originalExitPrice, quantityToTrade, 'sell')
