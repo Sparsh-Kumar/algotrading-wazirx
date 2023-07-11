@@ -124,9 +124,9 @@ class MeanReversion(WazirXHelper):
             while True:
                 time.sleep(3)
                 kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.lookBackPeriod + 1)
-                kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
-                if kLineDataFrame is None or kLineDataFrame.empty:
-                    continue
+                # kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
+                # if kLineDataFrame is None or kLineDataFrame.empty:
+                #     continue
 
                 kLineDataFrame = self.calculateMean(kLineDataFrame)
                 kLineDataFrame = self.calculateStd(kLineDataFrame)
