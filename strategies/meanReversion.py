@@ -18,7 +18,16 @@ class MeanReversion(WazirXHelper):
         self.lookBackPeriod = 20
         self.entryThreshold = 1.5
         self.exitThreshold = 0.5
+        self.buyAssetPrice = None
+        self.totalAssetBuyPrice = None
+        self.sellAssetPrice = None
+        self.totalAssetSellPrice = None
+        self.timeOfBuy = None
+        self.humanReadableTimeofBuy = None
+        self.timeOfSell = None
+        self.humanReadableTimeOfSell = None
         self.uuidOfTrade = None
+        self.position = None
         self.dbClient = None
         self.databaseHandle = None
         self.collectionHandle = None
@@ -88,13 +97,62 @@ class MeanReversion(WazirXHelper):
                 kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.lookBackPeriod + 1)
                 kLineDataFrame = self.calculateMean(kLineDataFrame)
                 kLineDataFrame = self.calculateStd(kLineDataFrame)
+                
+                # Getting the best Ask from the order book
+                latestOrderBookData = self.getOrderBookData(symbol, 5)
+                latestOrderBookData = latestOrderBookData.json()
+                bestAsk = float(latestOrderBookData['asks'][0][0])
+                
+                if self.position is None and (bestAsk < (kLineDataFrame.iloc[-1]['Mean'] - (self.entryThreshold * kLineDataFrame.iloc[-1]['StdDev']))):
+                    self.position = 'long'
+                    self.buyAssetPrice = float(bestAsk)
+                    self.totalAssetBuyPrice = float(self.buyAssetPrice) * float(quantityToTrade)
+                    self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
+                    self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
+
+                    ## Make Actual Order
+                    ## Do Database Operations.
+                    print(f"Bought {quantityToTrade} {symbol}(s) at {self.buyAssetPrice} each with Total Buy Price equals to {self.totalAssetBuyPrice}")
+                    break
+
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print('\nTrying to Buy\n=============')
+                print(f"Best Ask Till Now is {bestAsk}")
                 print(kLineDataFrame)
-                # Todo
             
             # Sell Loop
             while True:
                 time.sleep(3)
-                # Todo
+                kLineDataFrame = self.getDataWithXMinTimeFrame(symbol, self.lookBackPeriod + 1)
+                kLineDataFrame = kLineDataFrame[kLineDataFrame.Time > self.timeOfBuy]
+                if kLineDataFrame is None or kLineDataFrame.empty:
+                    continue
+
+                kLineDataFrame = self.calculateMean(kLineDataFrame)
+                kLineDataFrame = self.calculateStd(kLineDataFrame)
+                
+                # Getting the best Bid from the order book
+                latestOrderBookData = self.getOrderBookData(symbol, 5)
+                latestOrderBookData = latestOrderBookData.json()
+                bestBid = float(latestOrderBookData['bids'][0][0])
+
+                if self.position == 'long' and (bestBid > (kLineDataFrame.iloc[-1]['Mean'] + (self.entryThreshold * kLineDataFrame.iloc[-1]['StdDev']))):
+                    self.position = None
+                    self.sellAssetPrice = float(bestBid)
+                    self.totalAssetSellPrice = float(self.sellAssetPrice) * float(quantityToTrade)
+                    self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
+                    self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
+
+                    ## Make Actual Order
+                    ## Do Database Operations
+                    print(f"Sold {quantityToTrade} {symbol}(s) at {self.sellAssetPrice} each with Total Buy Price equals to {self.totalAssetSellPrice}")
+                    break
+
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print(f"Bought {quantityToTrade} {symbol}(s) at {self.buyAssetPrice} each with Total Buy Price equals to {self.totalAssetBuyPrice}")
+                print('\nTrying to Sell\n=============')
+                print(f"Best Bid Till Now is {bestBid}")
+                print(kLineDataFrame)
 
         except Exception as e:
             self.loggerInstance.logError(str(e))
