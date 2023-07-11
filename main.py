@@ -1,4 +1,5 @@
 import argparse
+import gc
 from logger import Logger
 from loadenv import loadEnvironmentVariables
 from request import Requests
@@ -30,6 +31,10 @@ def main():
         while True:
             strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
             strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+
+            # After completion, free the allocated memory
+            del strategyInstance
+            gc.collect()
 
 
 if __name__ == '__main__':
