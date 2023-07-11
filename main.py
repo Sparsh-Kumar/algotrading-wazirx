@@ -28,13 +28,13 @@ def main():
     assetSymbol = arguments.symbol
     quantityToTrade = arguments.quantity
     if strategyCode == SCALPING_ATR:
-        while True:
-            strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
-            strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+        # while True:
+        strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
+        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
 
             # After completion, free the allocated memory
-            del strategyInstance
-            gc.collect()
+        del strategyInstance
+        gc.collect()
 
 
 if __name__ == '__main__':

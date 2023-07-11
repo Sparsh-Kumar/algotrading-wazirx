@@ -132,7 +132,7 @@ class ScalpingATR(WazirXHelper):
                     self.originalTotalBuyPrice = float(self.originalEntryPrice) * float(quantityToTrade)
                     self.speculatedExitPrice = float(self.originalEntryPrice) + (float(self.exitThreshold) * float(kLineDataFrame.iloc[-1]['ATR']))
                     self.speculatedTotalSellPrice = float(self.speculatedExitPrice) * float(quantityToTrade)
-                    self.stopLossPrice = float(self.originalEntryPrice) * (1 + float(self.stopLossPercentage))
+                    self.stopLossPrice = float(self.originalEntryPrice) * (1 - float(self.stopLossPercentage))
 
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
