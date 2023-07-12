@@ -113,6 +113,7 @@ class SMACrossover(WazirXHelper):
                                 'totalAssetBuyPrice': self.totalAssetBuyPrice,
                                 'timeOfBuy': self.humanReadableTimeOfBuy,
                                 'buyOrderDetails': self.buyOrderDetails,
+                                'wazirXBuyOrderId': self.buyOrderDetails['id'],
                             }
                         },
                         return_document=ReturnDocument.AFTER
@@ -185,6 +186,7 @@ class SMACrossover(WazirXHelper):
                                 'totalAssetSellPrice': self.totalAssetSellPrice,
                                 'timeOfSell': self.humanReadableTimeOfSell,
                                 'sellOrderDetails': self.sellOrderDetails,
+                                'wazirXSellOrderId': self.sellOrderDetails['id'],
                             }
                         },
                         return_document=ReturnDocument.AFTER
