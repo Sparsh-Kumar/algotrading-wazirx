@@ -19,6 +19,7 @@ def main():
         '--symbol', type=str, dest='symbol', help='Asset Symbol.')
     argumentParser.add_argument('--strategy', type=str, choices=[
                                 SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER }, { MEAN_REVERSION }, { SMA_CROSSOVER })')
+    numberOfTrades = 5
     arguments = argumentParser.parse_args()
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
@@ -30,26 +31,26 @@ def main():
     assetSymbol = arguments.symbol
     quantityToTrade = arguments.quantity
     if strategyCode == SCALPING_ATR:
-        # while True:
-        strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
-        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
-        # After completion, free the allocated memory
-        del strategyInstance
-        gc.collect()
+        for i in range(numberOfTrades):
+            strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
+            strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+            # After completion, free the allocated memory
+            del strategyInstance
+            gc.collect()
     elif strategyCode == MEAN_REVERSION:
-        # while True:
-        strategyInstance = MeanReversion(jsonEnvContent, requestInstance, loggerInstance)
-        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
-        # After completion, free the allocated memory
-        del strategyInstance
-        gc.collect()
+        for i in range(numberOfTrades):
+            strategyInstance = MeanReversion(jsonEnvContent, requestInstance, loggerInstance)
+            strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+            # After completion, free the allocated memory
+            del strategyInstance
+            gc.collect()
     elif strategyCode == SMA_CROSSOVER:
-        # while True:
-        strategyInstance = SMACrossover(jsonEnvContent, requestInstance, loggerInstance)
-        strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
-        # After completion, free the allocated memory
-        del strategyInstance
-        gc.collect()
+        for i in range(numberOfTrades):
+            strategyInstance = SMACrossover(jsonEnvContent, requestInstance, loggerInstance)
+            strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
+            # After completion, free the allocated memory
+            del strategyInstance
+            gc.collect()
 
 
 if __name__ == '__main__':
