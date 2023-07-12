@@ -22,7 +22,7 @@ class SMACrossover(WazirXHelper):
         self.sellAssetPrice = None
         self.totalAssetSellPrice = None
         self.timeOfBuy = None
-        self.humanReadableTimeofBuy = None
+        self.humanReadableTimeOfBuy = None
         self.timeOfSell = None
         self.humanReadableTimeOfSell = None
         self.uuidOfTrade = None
@@ -95,7 +95,7 @@ class SMACrossover(WazirXHelper):
                     self.buyAssetPrice = kLineDataFrame.iloc[-1]['Close']
                     self.totalAssetBuyPrice = self.buyAssetPrice * quantityToTrade
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
-                    self.humanReadableTimeofBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
+                    self.humanReadableTimeOfBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
 
                     ## Make Actual Order
                     self.buyOrderDetails = self.sendOrder(symbol, self.buyAssetPrice, quantityToTrade, 'buy')
