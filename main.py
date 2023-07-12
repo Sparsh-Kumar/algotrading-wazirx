@@ -17,9 +17,10 @@ def main():
         '--quantity', type=float, dest='quantity', help='Quantity of asset to trade.')
     argumentParser.add_argument(
         '--symbol', type=str, dest='symbol', help='Asset Symbol.')
+    argumentParser.add_argument(
+        '--number', type=int, dest='number', help='Number Of Trades to Execute.')
     argumentParser.add_argument('--strategy', type=str, choices=[
                                 SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER }, { MEAN_REVERSION }, { SMA_CROSSOVER })')
-    numberOfTrades = 5
     arguments = argumentParser.parse_args()
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
@@ -30,6 +31,7 @@ def main():
     strategyCode = arguments.strategy
     assetSymbol = arguments.symbol
     quantityToTrade = arguments.quantity
+    numberOfTrades = int(arguments.number)
     if strategyCode == SCALPING_ATR:
         for i in range(numberOfTrades):
             strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)

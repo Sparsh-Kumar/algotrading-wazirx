@@ -21,6 +21,8 @@ class SMACrossover(WazirXHelper):
         self.totalAssetBuyPrice = None
         self.sellAssetPrice = None
         self.totalAssetSellPrice = None
+        self.stopLossPrice = None
+        self.stopLossPercentage = 0.01
         self.timeOfBuy = None
         self.humanReadableTimeOfBuy = None
         self.timeOfSell = None
@@ -96,6 +98,7 @@ class SMACrossover(WazirXHelper):
                     self.totalAssetBuyPrice = self.buyAssetPrice * quantityToTrade
                     self.timeOfBuy = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeOfBuy = kLineDataFrame.iloc[-1]['HumanReadableTime']
+                    self.stopLossPrice = self.buyAssetPrice * (1 - self.stopLossPercentage)
 
                     ## Make Actual Order
                     self.buyOrderDetails = self.sendOrder(symbol, self.buyAssetPrice, quantityToTrade, 'buy')
@@ -109,6 +112,7 @@ class SMACrossover(WazirXHelper):
                         {
                             '$set': {
                                 'buyAssetPrice': self.buyAssetPrice,
+                                'stopLossPrice': self.stopLossPrice,
                                 'quantity': quantityToTrade,
                                 'totalAssetBuyPrice': self.totalAssetBuyPrice,
                                 'timeOfBuy': self.humanReadableTimeOfBuy,
@@ -134,7 +138,7 @@ class SMACrossover(WazirXHelper):
                 kLineDataFrame['SMA-Short'] = kLineDataFrame['Close'].rolling(self.shortSMALookup).mean()
                 kLineDataFrame['SMA-Long'] = kLineDataFrame['Close'].rolling(self.longSMALookup).mean()
 
-                if self.position == 'long' and (kLineDataFrame.iloc[-1]['SMA-Long'] > kLineDataFrame.iloc[-1]['SMA-Short']) and (kLineDataFrame.iloc[-2]['SMA-Long'] < kLineDataFrame.iloc[-2]['SMA-Short']):
+                if self.position == 'long' and (((kLineDataFrame.iloc[-1]['SMA-Long'] > kLineDataFrame.iloc[-1]['SMA-Short']) and (kLineDataFrame.iloc[-2]['SMA-Long'] < kLineDataFrame.iloc[-2]['SMA-Short'])) or (kLineDataFrame.iloc[-1]['Close'] <= self.stopLossPrice)):
 
                     ## Checking the limit order status
                     currentBuyOrderDetails = self.getOrderDetails(self.mongoDbBuyOrderDetailsDoc['wazirXBuyOrderId'])
@@ -169,6 +173,7 @@ class SMACrossover(WazirXHelper):
                     self.totalAssetSellPrice = self.sellAssetPrice * quantityToTrade
                     self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
+                    stopLossHit = kLineDataFrame.iloc[-1]['Close'] <= self.stopLossPrice
 
                     ## Make Actual Order
                     self.sellOrderDetails = self.sendOrder(symbol, self.sellAssetPrice, quantityToTrade, 'sell')
@@ -187,6 +192,7 @@ class SMACrossover(WazirXHelper):
                                 'timeOfSell': self.humanReadableTimeOfSell,
                                 'sellOrderDetails': self.sellOrderDetails,
                                 'wazirXSellOrderId': self.sellOrderDetails['id'],
+                                'stopLossHit': stopLossHit
                             }
                         },
                         return_document=ReturnDocument.AFTER
