@@ -173,7 +173,7 @@ class SMACrossover(WazirXHelper):
                     self.totalAssetSellPrice = self.sellAssetPrice * quantityToTrade
                     self.timeOfSell = kLineDataFrame.iloc[-1]['Time']
                     self.humanReadableTimeOfSell = kLineDataFrame.iloc[-1]['HumanReadableTime']
-                    stopLossHit = kLineDataFrame.iloc[-1]['Close'] <= self.stopLossPrice
+                    stopLossHit = bool(kLineDataFrame.iloc[-1]['Close'] <= self.stopLossPrice)
 
                     ## Make Actual Order
                     self.sellOrderDetails = self.sendOrder(symbol, self.sellAssetPrice, quantityToTrade, 'sell')

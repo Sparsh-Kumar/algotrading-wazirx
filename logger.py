@@ -2,11 +2,14 @@ import logging
 
 
 class Logger:
-    def __init__(self, logFileName='app.log', fileMode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'):
+    def __init__(self, logFileName='app.log', fileMode='w', loggingFormat='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'):
         logging.basicConfig(
-            filename=logFileName,
-            filemode=fileMode,
-            format=format
+            level=logging.DEBUG,
+            format=loggingFormat,
+            handlers=[
+                logging.FileHandler(logFileName, mode=fileMode),
+                logging.StreamHandler()
+            ]
         )
 
     def logDebug(self, message):
