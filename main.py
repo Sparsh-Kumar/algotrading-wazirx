@@ -5,7 +5,7 @@ from loadenv import loadEnvironmentVariables
 from request import Requests
 from strategies.scalpingATR import ScalpingATR
 from strategies.meanReversion import MeanReversion
-from strategies.smaCrossover import SMACrossover
+from strategies.smaCrossoverkLines import SMACrossover
 from strategyCodes import SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION, SMA_CROSSOVER
 
 
