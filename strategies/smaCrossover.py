@@ -22,7 +22,7 @@ class SMACrossover(WazirXHelper):
         self.sellAssetPrice = None
         self.totalAssetSellPrice = None
         self.stopLossPrice = None
-        self.stopLossPercentage = 0.01
+        self.stopLossPercentage = 0.005
         self.timeOfBuy = None
         self.humanReadableTimeOfBuy = None
         self.timeOfSell = None
