@@ -4,9 +4,8 @@ from logger import Logger
 from loadenv import loadEnvironmentVariables
 from request import Requests
 from strategies.scalpingATR import ScalpingATR
-from strategies.meanReversion import MeanReversion
 from strategies.smaCrossoverkLines import SMACrossover
-from strategyCodes import SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION, SMA_CROSSOVER
+from strategyCodes import SCALPING_ATR, SMA_CROSSOVER
 
 
 def main():
@@ -20,7 +19,7 @@ def main():
     argumentParser.add_argument(
         '--number', type=int, dest='number', help='Number Of Trades to Execute.')
     argumentParser.add_argument('--strategy', type=str, choices=[
-                                SCALPING_ATR, SMA_CROSSOVER, MEAN_REVERSION, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER }, { MEAN_REVERSION }, { SMA_CROSSOVER })')
+                                SCALPING_ATR, SMA_CROSSOVER], dest='strategy', help=f'Strategy code to use ({ SCALPING_ATR }, { SMA_CROSSOVER })')
     arguments = argumentParser.parse_args()
     loggerInstance = Logger()
     jsonEnvContent = loadEnvironmentVariables(loggerInstance, 'wazirx.json')
@@ -35,13 +34,6 @@ def main():
     if strategyCode == SCALPING_ATR:
         for i in range(numberOfTrades):
             strategyInstance = ScalpingATR(jsonEnvContent, requestInstance, loggerInstance)
-            strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
-            # After completion, free the allocated memory
-            del strategyInstance
-            gc.collect()
-    elif strategyCode == MEAN_REVERSION:
-        for i in range(numberOfTrades):
-            strategyInstance = MeanReversion(jsonEnvContent, requestInstance, loggerInstance)
             strategyInstance.executeStrategy(assetSymbol, quantityToTrade)
             # After completion, free the allocated memory
             del strategyInstance
