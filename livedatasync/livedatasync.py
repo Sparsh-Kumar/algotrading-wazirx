@@ -26,7 +26,7 @@ class LiveDataSync(WazirXHelper):
     def dbConnect(self):
         try:
             self.dbClient = MongoClient(self.creds['databaseURI'])
-            self.databaseHandle = self.dbClient.get_database(self.creds['databaseName'])
+            self.databaseHandle = self.dbClient.get_database(self.creds['syncDatabaseName'])
         except Exception as e:
             self.loggerInstance.logError(str(e))
             sys.exit()
