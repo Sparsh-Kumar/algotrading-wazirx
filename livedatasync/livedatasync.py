@@ -17,7 +17,7 @@ class LiveDataSync(WazirXHelper):
     def __init__ (self, creds, requestInstance, loggerInstance):
         super().__init__(creds, requestInstance, loggerInstance)
         self.assets = ['xrpinr', 'dogeinr', 'shibinr', 'ethinr']
-        self.sleepTime = 2 # In seconds
+        self.sleepTime = 10 # In seconds
         self.databaseHandle = None
         self.collectionHandle = None
         self.syncDataFor = 5 # In Days
@@ -62,7 +62,7 @@ class LiveDataSync(WazirXHelper):
                         self.collectionHandle.delete_many({ '_id': { '$in': recordsToDeleteIds } })
                     insertedRecord = self.collectionHandle.insert_one(priceInfo)
                     print(insertedRecord.inserted_id)
-                time.sleep(2)
+                time.sleep(self.sleepTime)
         except Exception as e:
             self.loggerInstance.logError(str(e))
             sys.exit()
