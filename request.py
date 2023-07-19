@@ -2,9 +2,13 @@ import requests
 
 
 class Requests:
-    def __init__(self, baseEndpoint=None, headers=None):
+    def __init__(self, baseEndpoint=None, currentPriceInfoEndpoint = None, headers=None):
         self.baseEndpoint = baseEndpoint
+        self.currentPriceInfoEndpoint = currentPriceInfoEndpoint
         self.headers = headers
+
+    def getCurrentPriceInfoURI(self):
+        return requests.get(self.currentPriceInfoEndpoint)
 
     def getURI(self, endpoint=None, queryParams={}):
         return requests.get(self.baseEndpoint + endpoint, headers=self.headers, params=queryParams)

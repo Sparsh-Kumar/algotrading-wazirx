@@ -1,5 +1,6 @@
 {
   "baseURI": "https://api.wazirx.com/sapi/v1",
+  "liveDataURI": "https://api.wazirx.com/api/v2/tickers",
   "ApiKey": "{{YOUR_API_KEY}}",
   "SecretKey": "{{YOUR_SECRET_KEY}}",
   "databaseURI": "{{databaseURI}}",

@@ -119,5 +119,13 @@ class WazirXHelper:
             self.loggerInstance.logError(str(e))
             sys.exit()
 
+    # Get Current Data
+    def getCurrentPriceInfo(self):
+        try:
+            return self.requestInstance.getCurrentPriceInfoURI()
+        except Exception as e:
+            self.loggerInstance.logError(str(e))
+            sys.exit()
+
     def __del__(self):
         pass
