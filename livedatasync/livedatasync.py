@@ -65,7 +65,8 @@ class LiveDataSync(WazirXHelper):
                 time.sleep(self.sleepTime)
         except Exception as e:
             self.loggerInstance.logError(str(e))
-            sys.exit()
+            self.liveDataSync()
+            # sys.exit()
 
     def __del__ (self):
         pass
