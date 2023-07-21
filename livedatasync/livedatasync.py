@@ -21,7 +21,9 @@ class LiveDataSync(WazirXHelper):
         self.databaseHandle = None
         self.collectionHandle = None
         self.syncDataFor = 5 # In Days
+        self.errorRecursionLimit = 100000
         self.dbConnect()
+        self.setErrorRecursionLimit()
 
     def dbConnect(self):
         try:
@@ -30,6 +32,9 @@ class LiveDataSync(WazirXHelper):
         except Exception as e:
             self.loggerInstance.logError(str(e))
             sys.exit()
+
+    def setErrorRecursionLimit(self):
+        sys.setrecursionlimit(self.errorRecursionLimit)
 
     def liveDataSync(self):
         try:
@@ -65,6 +70,8 @@ class LiveDataSync(WazirXHelper):
                 time.sleep(self.sleepTime)
         except Exception as e:
             self.loggerInstance.logError(str(e))
+            time.sleep(self.sleepTime)
+            self.dbConnect()
             self.liveDataSync()
             # sys.exit()
 
